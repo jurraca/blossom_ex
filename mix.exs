@@ -25,14 +25,14 @@ defmodule Blossom.MixProject do
       {:req, "~> 0.5"},
       {:plug, "~> 1.15"},
       {:jason, "~> 1.4"},
-      # TODO: Add nostr_ex when secp256k1 compilation is resolved
       {:nostr_ex, "~> 0.1.0"},
-      
-      # Optional server dependency  
+
+      # Optional server dependency
       {:bandit, "~> 1.7", optional: true},
-      
+
       # Development and testing
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:deps_nix, "~> 2.6.0"}
     ]
   end
 end
