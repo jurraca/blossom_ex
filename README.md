@@ -1,6 +1,6 @@
 # Blossom
 
-**TODO: Add description**
+An Elixir implementation of the [Blossom](https://github.com/hzrd149/blossom/) protocol for storing blobs on webservers.
 
 ## Installation
 
