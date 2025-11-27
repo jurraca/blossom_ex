@@ -131,14 +131,11 @@ defmodule Blossom.Client do
 
     case Req.put(url, body: content, headers: headers, receive_timeout: timeout) do
       {:ok, %{status: 200, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, json} ->
-            case BlobDescriptor.from_json(json) do
-              {:ok, descriptor} -> {:ok, descriptor}
-              error -> error
-            end
-          {:error, _} -> {:error, :invalid_response}
-        end
+        # Req auto-decodes the json
+         case BlobDescriptor.from_json(body) do
+           {:ok, descriptor} -> {:ok, descriptor}
+           error -> error
+         end
 
       {:ok, %{status: 401}} ->
         {:error, :unauthorized}
