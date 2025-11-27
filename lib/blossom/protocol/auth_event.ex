@@ -1,9 +1,8 @@
 defmodule Blossom.Protocol.AuthEvent do
   @moduledoc """
   Nostr authorization event for Blossom protocol (kind 24242).
-  
+
   Authorization events are used to authenticate users to Blossom servers.
-  This is a placeholder implementation until nostr_ex is available.
   """
 
   @type t :: %__MODULE__{
@@ -20,7 +19,7 @@ defmodule Blossom.Protocol.AuthEvent do
 
   @doc """
   Creates a new authorization event for the given action.
-  
+
   Actions: "get", "upload", "list", "delete"
   """
   @spec new(String.t(), String.t(), keyword()) :: t()
@@ -80,7 +79,8 @@ defmodule Blossom.Protocol.AuthEvent do
   """
   @spec validate(t()) :: :ok | {:error, term()}
   def validate(%__MODULE__{} = event) do
-    with :ok <- validate_kind(event.kind),
+    with :ok <- validate_sig(event),
+         :ok <- validate_kind(event.kind),
          :ok <- validate_created_at(event.created_at),
          :ok <- validate_tags(event.tags),
          :ok <- validate_expiration(event.tags) do
@@ -167,6 +167,14 @@ defmodule Blossom.Protocol.AuthEvent do
   defp maybe_add_server_tag(tags, nil), do: tags
   defp maybe_add_server_tag(tags, server_url) do
     tags ++ [["server", server_url]]
+  end
+
+  defp validate_sig(event) do
+    if Nostr.Event.Validator.valid?(event) do
+      :ok
+    else
+      {:error, "invalid signature"}
+    end
   end
 
   defp validate_kind(24242), do: :ok
