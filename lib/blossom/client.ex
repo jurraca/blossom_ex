@@ -1,7 +1,7 @@
 defmodule Blossom.Client do
   @moduledoc """
   HTTP client for interacting with Blossom servers.
-  
+
   Uses Req for HTTP operations and provides a simple API for Blossom protocol operations.
   Note: Cryptographic signing functionality will be added when nostr_ex is available.
   """
@@ -12,21 +12,21 @@ defmodule Blossom.Client do
 
   @doc """
   Gets a blob from a Blossom server by its SHA256 hash.
-  
+
   ## Options
-  
+
     * `:auth` - Authorization event for authenticated requests
     * `:timeout` - Request timeout in milliseconds (default: 30_000)
     * `:file_extension` - Optional file extension to append to URL
-  
+
   ## Examples
-  
+
       {:ok, blob} = Blossom.Client.get_blob("https://blossom.example.com", "abc123...")
-      
+
       # With file extension
       {:ok, blob} = Blossom.Client.get_blob(
-        "https://blossom.example.com", 
-        "abc123...", 
+        "https://blossom.example.com",
+        "abc123...",
         file_extension: ".pdf"
       )
   """
@@ -40,7 +40,7 @@ defmodule Blossom.Client do
       {:ok, %{status: 200, body: content, headers: response_headers}} ->
         content_type = get_content_type(response_headers)
         blob = Blob.new(content, content_type)
-        
+
         # Verify the SHA256 matches what we requested
         if blob.sha256 == sha256 do
           {:ok, blob}
@@ -68,7 +68,7 @@ defmodule Blossom.Client do
 
   @doc """
   Checks if a blob exists on a Blossom server.
-  
+
   Uses HEAD request for efficiency.
   """
   @spec has_blob(String.t(), binary(), keyword()) :: {:ok, boolean()} | {:error, term()}
@@ -98,18 +98,18 @@ defmodule Blossom.Client do
 
   @doc """
   Uploads a blob to a Blossom server.
-  
-  Note: This is a placeholder implementation. Proper authentication 
+
+  Note: This is a placeholder implementation. Proper authentication
   will be added when nostr_ex is available.
-  
+
   ## Options
-  
+
     * `:private_key` - Nostr private key for signing authorization event
     * `:description` - Human-readable description for the upload
     * `:timeout` - Request timeout in milliseconds (default: 60_000)
-  
+
   ## Examples
-  
+
       {:ok, descriptor} = Blossom.Client.upload_blob(
         "https://blossom.example.com",
         file_content,
@@ -121,7 +121,7 @@ defmodule Blossom.Client do
   def upload_blob(server_url, content, opts \\ []) when is_binary(content) do
     url = build_upload_url(server_url)
     timeout = Keyword.get(opts, :timeout, 60_000)
-    
+
     # TODO: Add proper Nostr signing when nostr_ex is available
     auth_event = create_upload_auth(content, opts)
     headers = [
@@ -154,9 +154,9 @@ defmodule Blossom.Client do
 
   @doc """
   Lists blobs uploaded by a specific public key.
-  
+
   ## Options
-  
+
     * `:since` - Unix timestamp to filter blobs uploaded since
     * `:until` - Unix timestamp to filter blobs uploaded until
     * `:auth` - Authorization event for authenticated requests
@@ -172,12 +172,12 @@ defmodule Blossom.Client do
       {:ok, %{status: 200, body: body}} ->
         case Jason.decode(body) do
           {:ok, json_list} when is_list(json_list) ->
-            descriptors = 
+            descriptors =
               json_list
               |> Enum.map(&BlobDescriptor.from_json/1)
               |> Enum.filter(&match?({:ok, _}, &1))
               |> Enum.map(fn {:ok, descriptor} -> descriptor end)
-            
+
             {:ok, descriptors}
 
           {:ok, _} -> {:error, :invalid_response_format}
@@ -201,15 +201,15 @@ defmodule Blossom.Client do
 
   @doc """
   Deletes a blob from a Blossom server.
-  
-  Note: This is a placeholder implementation. Proper authentication 
+
+  Note: This is a placeholder implementation. Proper authentication
   will be added when nostr_ex is available.
   """
   @spec delete_blob(String.t(), binary(), keyword()) :: :ok | {:error, term()}
   def delete_blob(server_url, sha256, opts \\ []) when is_binary(sha256) do
     url = build_blob_url(server_url, sha256)
     timeout = Keyword.get(opts, :timeout, 30_000)
-    
+
     # TODO: Add proper Nostr signing when nostr_ex is available
     auth_event = create_delete_auth(sha256, opts)
     headers = [{"authorization", "Nostr #{AuthEvent.to_auth_header(auth_event)}"}]
@@ -247,13 +247,13 @@ defmodule Blossom.Client do
 
   defp build_list_url(server_url, pubkey, opts) do
     base_url = server_url |> String.trim_trailing("/") |> Kernel.<>("/list/#{pubkey}")
-    
-    query_params = 
+
+    query_params =
       opts
       |> Keyword.take([:since, :until])
       |> Enum.reject(fn {_, v} -> is_nil(v) end)
       |> Enum.map(fn {k, v} -> "#{k}=#{v}" end)
-    
+
     if query_params == [] do
       base_url
     else
